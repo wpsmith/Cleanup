@@ -17,7 +17,7 @@
  * @since      0.1.0
  */
 
-namespace WPS\Core;
+namespace WPS\WP;
 
 use WPS;
 
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( __NAMESPACE__ . '\WordPress_Cleanup' ) ) {
+if ( ! class_exists( __NAMESPACE__ . '\WordPressCleanup' ) ) {
 	/**
 	 * WordPress Cleanup Class
 	 *
@@ -35,7 +35,7 @@ if ( ! class_exists( __NAMESPACE__ . '\WordPress_Cleanup' ) ) {
 	 * @package WPS\WP
 	 * @author Travis Smith <t@wpsmith.net>
 	 */
-	class WordPress_Cleanup extends Cleanup {
+	class WordPressCleanup extends Cleanup {
 
 		/**
 		 * Implements plugins_loaded abstract method.

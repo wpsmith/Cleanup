@@ -8,7 +8,7 @@
  * Any modifications to or software including (via compiler) GPL-licensed code must also be made
  * available under the GPL along with build & install instructions.
  *
- * @package    WPS\WP
+ * @package    WPS\Core
  * @author     Travis Smith <t@wpsmith.net>
  * @copyright  2015-2019 Travis Smith
  * @license    http://opensource.org/licenses/gpl-2.0.php GNU Public License v2
@@ -20,13 +20,11 @@
 namespace WPS\WP;
 
 // Exit if accessed directly.
-use function WPS\printr;
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( __NAMESPACE__ . '\Cleanup_Public' ) ) {
+if ( ! class_exists( __NAMESPACE__ . '\CleanupPublic' ) ) {
 	/**
 	 * Cleanup_Public Abstract Class
 	 *
@@ -36,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\Cleanup_Public' ) ) {
 	 * @package WPS\WP
 	 * @author  Travis Smith <t@wpsmith.net>
 	 */
-	class Cleanup_Public extends Cleanup {
+	class CleanupPublic extends Cleanup {
 
 		/**
 		 * Widgets filters to filter.

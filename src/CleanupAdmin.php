@@ -1,6 +1,6 @@
 <?php
 /**
- * Cleanup_Admin Abstract Class
+ * CleanupAdmin Abstract Class
  *
  * Cleans up some of the output from WordPress to obscure the CMS.
  *
@@ -8,7 +8,7 @@
  * Any modifications to or software including (via compiler) GPL-licensed code must also be made
  * available under the GPL along with build & install instructions.
  *
- * @package    WPS\WP
+ * @package    WPS\Core
  * @author     Travis Smith <t@wpsmith.net>
  * @copyright  2015-2019 Travis Smith
  * @license    http://opensource.org/licenses/gpl-2.0.php GNU Public License v2
@@ -24,9 +24,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( __NAMESPACE__ . '\Cleanup_Admin' ) ) {
+if ( ! class_exists( __NAMESPACE__ . '\CleanupAdmin' ) ) {
 	/**
-	 * Cleanup_Admin Abstract Class
+	 * CleanupAdmin Abstract Class
 	 *
 	 * Assists in cleaning up some widgets, dashboard,
 	 * menu items, admin bar, post formats, and frontend HTML header tags.
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\Cleanup_Admin' ) ) {
 	 * @package WPS\WP
 	 * @author  Travis Smith <t@wpsmith.net>
 	 */
-	class Cleanup_Admin extends Cleanup {
+	class CleanupAdmin extends Cleanup {
 
 		/**
 		 * Supported WP Widget classes that can be removed.
