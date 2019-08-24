@@ -66,6 +66,26 @@ if ( ! class_exists( __NAMESPACE__ . '\WordPressCleanup' ) ) {
 
 			// Soliloquy.
 			add_action( 'soliloquy_init', array( $this, 'soliloquy_init' ), 9999 );
+
+			// Remove version numbering.
+			add_filter( 'script_loader_src', array( $this, 'remove_wp_version_strings' ) );
+			add_filter( 'style_loader_src', array( $this, 'remove_wp_version_strings' ) );
+
+		}
+
+		/**
+		 * Hide WP version strings from scripts and styles
+		 *
+		 * @return string $src
+		 */
+		public function remove_wp_version_strings( $src ) {
+			global $wp_version;
+			parse_str( parse_url( $src, PHP_URL_QUERY ), $query );
+			if ( ! empty( $query['ver'] ) && $query['ver'] === $wp_version ) {
+				$src = remove_query_arg( 'ver', $src );
+			}
+
+			return $src;
 		}
 
 		/**
