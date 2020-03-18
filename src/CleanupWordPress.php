@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( __NAMESPACE__ . '\WordPressCleanup' ) ) {
+if ( ! class_exists( __NAMESPACE__ . '\CleanupWordPress' ) ) {
 	/**
 	 * WordPress Cleanup Class
 	 *
@@ -35,7 +35,7 @@ if ( ! class_exists( __NAMESPACE__ . '\WordPressCleanup' ) ) {
 	 * @package WPS\WP
 	 * @author Travis Smith <t@wpsmith.net>
 	 */
-	class WordPressCleanup extends Cleanup {
+	class CleanupWordPress extends Cleanup {
 
 		/**
 		 * Array of redirects.

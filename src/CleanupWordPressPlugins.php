@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( __NAMESPACE__ . '\WordPressPluginsCleanup' ) ) {
+if ( ! class_exists( __NAMESPACE__ . '\CleanupWordPressPlugins' ) ) {
 	/**
 	 * WordPress Cleanup Class
 	 *
@@ -35,7 +35,7 @@ if ( ! class_exists( __NAMESPACE__ . '\WordPressPluginsCleanup' ) ) {
 	 * @package WPS\WP
 	 * @author Travis Smith <t@wpsmith.net>
 	 */
-	class WordPressPluginsCleanup  extends WordPressCleanup {
+	class CleanupWordPressPlugins  extends CleanupWordPress {
 
 		public $rcp_priority = 'low';
 
