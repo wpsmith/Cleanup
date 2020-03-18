@@ -206,7 +206,6 @@ if ( ! class_exists( __NAMESPACE__ . '\WordPressCleanup' ) ) {
 			return $classes;
 		}
 
-
 		/**
 		 * Hide WP version strings from scripts and styles
 		 *
