@@ -10,14 +10,14 @@
  *
  * @package    WPS\WP
  * @author     Travis Smith <t@wpsmith.net>
- * @copyright  2015-2019 Travis Smith
+ * @copyright  2015-2020 Travis Smith
  * @license    http://opensource.org/licenses/gpl-2.0.php GNU Public License v2
- * @link       https://github.com/wpsmith/WPS
+ * @link       https://github.com/wpsmith/Cleanup
  * @version    1.0.0
  * @since      0.1.0
  */
 
-namespace WPS\Core;
+namespace WPS\WP;
 
 use WPS;
 
@@ -35,7 +35,7 @@ if ( ! class_exists( __NAMESPACE__ . '\WordPress_Cleanup' ) ) {
 	 * @package WPS\WP
 	 * @author Travis Smith <t@wpsmith.net>
 	 */
-	class WordPress_Cleanup extends Cleanup {
+	class WordPress_Cleanup extends WordPressCleanup {
 
 		/**
 		 * Implements plugins_loaded abstract method.
