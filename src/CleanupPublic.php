@@ -10,9 +10,9 @@
  *
  * @package    WPS\Core
  * @author     Travis Smith <t@wpsmith.net>
- * @copyright  2015-2019 Travis Smith
+ * @copyright  2015-2020 Travis Smith
  * @license    http://opensource.org/licenses/gpl-2.0.php GNU Public License v2
- * @link       https://github.com/wpsmith/WPS
+ * @link       https://github.com/wpsmith/Cleanup
  * @version    1.0.0
  * @since      0.1.0
  */
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! class_exists( __NAMESPACE__ . '\CleanupPublic' ) ) {
 	/**
-	 * Cleanup_Public Abstract Class
+	 * CleanupPublic Class
 	 *
 	 * Assists in cleaning up some widgets, dashboard,
 	 * menu items, admin bar, post formats, and frontend HTML header tags.
@@ -43,12 +43,28 @@ if ( ! class_exists( __NAMESPACE__ . '\CleanupPublic' ) ) {
 		 *
 		 * @var array
 		 */
-		protected $_widgets = array(
+		protected $_frontend_widgets = array(
 			'show_recent_comments_widget_style' => false,
 		);
 
 		/**
-		 * Supported header scripts that can be removed.
+		 * Default rest methods that can be removed.
+		 *
+		 * @var array
+		 */
+		protected $_rest = array(
+			array( 'xmlrpc_rsd_apis', 'rest_output_rsd' ),
+			array( 'template_redirect', 'rest_output_link_header', 11 ),
+			array( 'auth_cookie_malformed', 'rest_cookie_collect_status' ),
+			array( 'auth_cookie_expired', 'rest_cookie_collect_status' ),
+			array( 'auth_cookie_bad_username', 'rest_cookie_collect_status' ),
+			array( 'auth_cookie_bad_hash', 'rest_cookie_collect_status' ),
+			array( 'auth_cookie_valid', 'rest_cookie_collect_status' ),
+			array( 'rest_authentication_errors', 'rest_cookie_check_errors', 100 ),
+		);
+
+		/**
+		 * Default header scripts that can be removed.
 		 *
 		 * Values should be a key => array( hook, callback, priority )
 		 * or script handle name.
@@ -67,73 +83,18 @@ if ( ! class_exists( __NAMESPACE__ . '\CleanupPublic' ) ) {
 		);
 
 		/**
-		 * Supported header links that can be removed.
-		 *
-		 * All callbacks are performed in the wp_head hook.
-		 * Values should be callback => priority.
+		 * Array of rest methods to remove.
 		 *
 		 * @var array
 		 */
-		protected $_links = array(
-			// remove rss feed links (make sure you add them in yourself if youre using feedblitz or an rss service).
-			// Remove the links to the general feeds: Post and Comment Feed
-			'feed_links'                      => 2,
-			// Remove the links to the extra feeds such as category feeds
-			'feed_links_extra'                => 3,
-
-			// remove link to index page.
-			'index_rel_link'                  => 10,
-			'wp_shortlink_wp_head'            => 10,
-
-			// Remove the link to the Windows Live Writer manifest file.
-			'wlwmanifest_link'                => 10,
-
-			// Remove really simple discovery link, EditURI link.
-			// Remove if not using a blog client found.
-			// https://codex.wordpress.org/Weblog_Client.
-			'rsd_link'                        => 10,
-
-			// Display the XHTML generator that is generated on the wp_head hook, WP version
-			'wp_generator'                    => 10,
-
-			// Remove start post link.
-			'start_post_rel_link'             => 10,
-
-			// Remove parent post link, prev link.
-			'parent_post_rel_link'            => 10,
-
-			// Remove relational links for the posts adjacent to the current post.
-			// Remove the next and previous post links.
-			'adjacent_posts_rel_link_wp_head' => 10,
-
-			// REST
-			'rest_output_link_wp_head'        => 10,
-		);
-
-		protected $_rest = array(
-			array( 'xmlrpc_rsd_apis', 'rest_output_rsd' ),
-			array( 'template_redirect', 'rest_output_link_header', 11, 0 ),
-			array( 'auth_cookie_malformed', 'rest_cookie_collect_status' ),
-			array( 'auth_cookie_expired', 'rest_cookie_collect_status' ),
-			array( 'auth_cookie_bad_username', 'rest_cookie_collect_status' ),
-			array( 'auth_cookie_bad_hash', 'rest_cookie_collect_status' ),
-			array( 'auth_cookie_valid', 'rest_cookie_collect_status' ),
-			array( 'rest_authentication_errors', 'rest_cookie_check_errors', 100 ),
-		);
+		public $rest;
 
 		/**
-		 * Array of admin bar items to remove.
+		 * Widgets filters to filter.
 		 *
-		 * @var array
+		 * @var array|mixed
 		 */
-		public $admin_bar;
-
-		/**
-		 * Array of header links to remove.
-		 *
-		 * @var array
-		 */
-		public $links;
+		public $frontend_widgets;
 
 		/**
 		 * Returns an array of defaults.
@@ -141,29 +102,38 @@ if ( ! class_exists( __NAMESPACE__ . '\CleanupPublic' ) ) {
 		 * @return array
 		 */
 		public function get_defaults() {
-			return array(
-				'admin_bar' => array(),
-				'links'     => array(),
-				'widgets'   => array(),
-			);
+
+			return wp_parse_args( array(
+				'rest'             => array(),
+				'frontend_widgets' => array(),
+			), parent::get_defaults() );
+
 		}
 
 		/**
-		 * Initializer.
+		 * Cleanup constructor.
 		 *
-		 * Runs immediately on instantiation.
+		 * @param array $args Array of args. Keys include: widgets, dashboard, menu, admin_bar, links
+		 *                    post_formats.
 		 */
-		public function setup( $args ) {
+		protected function __construct( $args ) {
 
 			if ( is_admin() ) {
 				return;
 			}
 
-			// Setup.
-			$this->admin_bar = $args['admin_bar'];
-			$this->links     = 'all' === $args['links'] || true === $args['links'] ? $this->_links : $args['links'];
-			$this->scripts   = 'all' === $args['scripts'] || true === $args['scripts'] ? $this->_scripts : $args['scripts'];
-			$this->widgets   = 'all' === $args['widgets'] || true === $args['widgets'] ? $this->_widgets : $args['widgets'];
+			parent::__construct( $args );
+
+			if ( 'all' === $args ) {
+
+				$this->remove_all();
+
+			} else {
+
+				$this->rest             = 'all' === $args['rest'] || true === $args['rest'] ? $this->_rest : $args['rest'];
+				$this->frontend_widgets = 'all' === $args['frontend_widgets'] || true === $args['frontend_widgets'] ? $this->_frontend_widgets : $args['frontend_widgets'];
+
+			}
 
 		}
 
@@ -172,58 +142,16 @@ if ( ! class_exists( __NAMESPACE__ . '\CleanupPublic' ) ) {
 		 */
 		public function plugins_loaded() {
 
-			// Admin Bar.
-			if ( ! empty( $this->admin_bar ) ) {
-				add_action( 'wp_before_admin_bar_render', array( $this, 'remove_admin_bar_items' ) );
-			}
-
-			// Scripts
-			if ( ! empty( $this->scripts ) ) {
-				add_action( 'init', array( $this, 'remove_scripts' ), ~PHP_INT_MAX );
-			}
-
-			// Links.
-			if ( ! empty( $this->links ) ) {
-				add_action( 'init', array( $this, 'remove_links' ), ~PHP_INT_MAX );
-			}
+			parent::plugins_loaded();
 
 			// Widgets.
-			if ( ! empty( $this->widgets ) ) {
-				add_action( 'init', array( $this, 'remove_frontend_widgets' ), ~PHP_INT_MAX );
+			if ( ! empty( $this->frontend_widgets ) ) {
+				add_action( 'init', array( $this, 'remove_frontend_widgets' ), PHP_INT_MAX );
 			}
 
-		}
-
-		/**
-		 * Removes the admin bar.
-		 */
-		public function remove_admin_bar() {
-
-			show_admin_bar( false );
-			add_filter( 'show_admin_bar', '__return_false' );
-
-		}
-
-		/**
-		 * Remove links from header.
-		 */
-		public function remove_links() {
-
-			foreach ( $this->links as $link => $priority ) {
-				if ( array_key_exists( $link, $this->_links ) ) {
-					remove_action( 'wp_head', $link, $priority );
-				}
-
-				if ( 'wp_generator' === $link ) {
-					add_filter( 'the_generator', '__return_false' );
-				} elseif ( 'feed_links' === $link ) {
-					remove_theme_support( 'automatic-feed-links' );
-
-					// Just in case someone re-adds these later
-					add_filter( 'feed_links_show_posts_feed', '__return_false' );
-					add_filter( 'feed_links_show_comments_feed', '__return_false' );
-				}
-
+			// REST.
+			if ( ! empty( $this->rest ) ) {
+				add_action( 'init', array( $this, 'remove_rest' ), PHP_INT_MAX );
 			}
 
 		}
@@ -232,7 +160,7 @@ if ( ! class_exists( __NAMESPACE__ . '\CleanupPublic' ) ) {
 		 * Removes front-end widget stuffs.
 		 */
 		public function remove_frontend_widgets() {
-			foreach ( $this->widgets as $filter => $value ) {
+			foreach ( $this->frontend_widgets as $filter => $value ) {
 				if ( false === $value ) {
 					add_filter( $filter, '__return_false' );
 				} else {
@@ -241,23 +169,30 @@ if ( ! class_exists( __NAMESPACE__ . '\CleanupPublic' ) ) {
 			}
 		}
 
-		/**
-		 * Removes WP native scripts.
-		 */
-		public function remove_scripts() {
 
-			foreach ( $this->scripts as $key => $data ) {
-				if ( is_array( $data ) ) {
-					foreach ( $data as $d ) {
-						if ( is_array( $d ) && count( $d ) > 2 ) {
-							remove_action( $d[0], $d[1], $d[2] );
-						}
-					}
-				} elseif ( is_string( $data ) ) {
-					wp_deregister_script( $data );
-				}
+		/**
+		 * Removes front-end widget stuffs.
+		 */
+		public function remove_rest() {
+
+			foreach ( $this->rest as $action ) {
+				$priority = isset( $action[2] ) ? $action[2] : 10;
+				remove_action( $action[0], $action[1], $priority );
 			}
 
 		}
+
+		/**
+		 * Removes all the items.
+		 */
+		public function remove_all() {
+
+			parent::remove_all();
+			$this->rest             = $this->_rest;
+			$this->frontend_widgets = $this->_frontend_widgets;
+
+		}
+
+
 	}
 }
