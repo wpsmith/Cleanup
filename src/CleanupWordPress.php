@@ -53,10 +53,7 @@ if ( ! class_exists( __NAMESPACE__ . '\WordPressCleanup' ) ) {
 		 *
 		 * @var array
 		 */
-		public $redirects;
-//		public $redirect_attachments;
-//		public $redirect_author;
-//		public $redirect_date;
+		public $redirects = array();
 
 		/**
 		 * Cleanup constructor.
@@ -65,6 +62,9 @@ if ( ! class_exists( __NAMESPACE__ . '\WordPressCleanup' ) ) {
 		 *                    post_formats.
 		 */
 		protected function __construct( $args ) {
+
+			// Ensure we have the proper setup.
+			$args = wp_parse_args( $args, $this->get_defaults() );
 
 			parent::__construct( $args );
 
@@ -125,6 +125,29 @@ if ( ! class_exists( __NAMESPACE__ . '\WordPressCleanup' ) ) {
 				add_filter( 'template_redirect', array( $this, 'template_redirect' ) );
 			}
 
+			// Dequeue jQuery Migrate.
+			add_filter( 'wp_default_scripts', array( $this, 'dequeue_jquery_migrate' ) );
+
+			// Singular body class.
+			add_filter( 'body_class', array( $this, 'singular_body_class' ) );
+
+			// Comment form, button class.
+			add_filter( 'comment_form_defaults', array( $this, 'comment_form_button_class' ) );
+
+			// Remove avatars from comment list.
+			add_filter( 'get_avatar', array( $this, 'remove_avatars_from_comments' ) );
+
+			// Clean Post Classes.
+			add_filter( 'post_class', array( $this, 'clean_post_classes' ), 5 );
+
+			// Archive Title, remove prefix.
+			add_filter( 'get_the_archive_title', array( $this, 'archive_title_remove_prefix' ) );
+
+			// Clean Nav Menu Classes.
+			add_filter( 'nav_menu_css_class', array( $this, 'clean_nav_menu_classes' ), 5, 3 );
+
+			// Clean body classes.
+			add_filter( 'body_class', array( $this, 'clean_body_classes' ), 20 );
 		}
 
 		/** PUBLIC API */
@@ -159,6 +182,30 @@ if ( ! class_exists( __NAMESPACE__ . '\WordPressCleanup' ) ) {
 		}
 
 		/** PRIVATE API */
+
+		/**
+		 * Dequeue jQuery Migrate
+		 *
+		 */
+		public function dequeue_jquery_migrate( &$scripts ) {
+			if ( ! is_admin() ) {
+				$scripts->remove( 'jquery' );
+				$scripts->add( 'jquery', false, array( 'jquery-core' ), '1.10.2' );
+			}
+		}
+
+		/**
+		 * Singular body class
+		 *
+		 */
+		public function singular_body_class( $classes ) {
+			if ( is_singular() ) {
+				$classes[] = 'singular';
+			}
+
+			return $classes;
+		}
+
 
 		/**
 		 * Hide WP version strings from scripts and styles
@@ -227,6 +274,141 @@ if ( ! class_exists( __NAMESPACE__ . '\WordPressCleanup' ) ) {
 			) {
 				$wp_query->set_404();
 			}
+		}
+
+		/**
+		 * Clean body classes
+		 *
+		 * @param array $classes Array of body classes.
+		 *
+		 * @return array
+		 */
+		public function clean_body_classes( $classes ) {
+
+			$allowed_classes = [
+				'singular',
+				'single',
+				'page',
+				'archive',
+				'admin-bar',
+				'full-width-content',
+				'content-sidebar',
+				'content',
+			];
+
+			return array_intersect( $classes, $allowed_classes );
+
+		}
+
+		/**
+		 * Clean Nav Menu Classes
+		 *
+		 * @param string[] $classes Array of the CSS classes that are applied to the menu item's `<li>` element.
+		 * @param \WP_Post $item The current menu item.
+		 * @param \stdClass $args An object of wp_nav_menu() arguments.
+		 *
+		 * @return array
+		 */
+		public function clean_nav_menu_classes( $classes, $item, $args ) {
+			if ( ! is_array( $classes ) ) {
+				return $classes;
+			}
+
+			foreach ( $classes as $i => $class ) {
+
+				// Remove class with menu item id
+				$id = strtok( $class, 'menu-item-' );
+				if ( 0 < intval( $id ) ) {
+					unset( $classes[ $i ] );
+				}
+
+				// Remove menu-item-type-*
+				if ( false !== strpos( $class, 'menu-item-type-' ) ) {
+					unset( $classes[ $i ] );
+				}
+
+				// Remove menu-item-object-*
+				if ( false !== strpos( $class, 'menu-item-object-' ) ) {
+					unset( $classes[ $i ] );
+				}
+
+				// Change page ancestor to menu ancestor
+				if ( 'current-page-ancestor' == $class ) {
+					$classes[] = 'current-menu-ancestor';
+					unset( $classes[ $i ] );
+				}
+			}
+
+			// Remove submenu class if depth is limited
+			if ( isset( $args->depth ) && 1 === $args->depth ) {
+				$classes = array_diff( $classes, array( 'menu-item-has-children' ) );
+			}
+
+			return $classes;
+		}
+
+		/**
+		 * Clean Post Classes
+		 *
+		 * @param array $classes Array of post classes.
+		 *
+		 * @return array
+		 */
+		public function clean_post_classes( $classes ) {
+
+			if ( ! is_array( $classes ) ) {
+				return $classes;
+			}
+
+			$allowed_classes = array(
+				'hentry',
+				'type-' . get_post_type(),
+			);
+
+			return array_intersect( $classes, $allowed_classes );
+		}
+
+		/**
+		 * Archive Title, remove prefix.
+		 *
+		 * @param string $title Archive Title.
+		 *
+		 * @return string
+		 */
+		public function archive_title_remove_prefix( $title ) {
+			$title_pieces = explode( ': ', $title );
+			if ( count( $title_pieces ) > 1 ) {
+				unset( $title_pieces[0] );
+				$title = join( ': ', $title_pieces );
+			}
+
+			return $title;
+		}
+
+		/**
+		 * Remove avatars from comment list.
+		 *
+		 * @param string $avatar &lt;img&gt; tag for the user's avatar.
+		 *
+		 * @return string
+		 */
+		public function remove_avatars_from_comments( $avatar ) {
+			global $in_comment_loop;
+
+			return $in_comment_loop ? '' : $avatar;
+		}
+
+		/**
+		 * Comment form, button class
+		 *
+		 * @param array $args The default comment form arguments.
+		 *
+		 * @return array
+		 */
+		public function comment_form_button_class( $args ) {
+			$args['class_submit'] = 'submit wp-block-button__link';
+
+			return $args;
 		}
 
 	}
