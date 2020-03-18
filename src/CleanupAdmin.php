@@ -98,6 +98,9 @@ if ( ! class_exists( __NAMESPACE__ . '\CleanupAdmin' ) ) {
 				return;
 			}
 
+			// Ensure we have the proper setup.
+			$args = wp_parse_args( $args, $this->get_defaults() );
+
 			parent::__construct( $args );
 
 			if ( 'all' === $args ) {
